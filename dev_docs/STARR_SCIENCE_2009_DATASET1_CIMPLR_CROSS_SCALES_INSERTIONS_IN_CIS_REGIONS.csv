@@ -1,0 +1,226 @@
+# CIS_ID,CIS18:34230563_15k
+# Nearest_gene(s),Apc
+# CIS_span,chr18:34220405-34300094
+# CIS_peak,chr18:34230563
+# EntrezID(s),11789
+# Number_of_associated_insertions,18
+# Scale,15000
+# P-value_raw_by_genome,0
+# Genome_adjusted_p_value,0
+# Peak_height,7.68582082193333
+# Normalised_peak_height,1
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr18,34220405,633-Duo-B,1,+,dataset1
+chr18,34223405,633-Col-A,1,+,dataset1
+chr18,34227536,360-Col-A,1,+,dataset1
+chr18,34230746,633-Duo-B,1,+,dataset1
+chr18,34231568,358-Duo-C,1,+,dataset1
+chr18,34231572,550-Col-A,1,+,dataset1
+chr18,34235175,299-Duo-B,1,+,dataset1
+chr18,34237073,299-Duo-A,1,+,dataset1
+chr18,34267274,633-Duo-B,1,+,dataset1
+chr18,34268015,299-Duo-C,1,+,dataset1
+chr18,34270326,470-Col-A,1,+,dataset1
+chr18,34271108,299-Duo-C,1,+,dataset1
+chr18,34274158,292-Jej-A,1,+,dataset1
+chr18,34283088,633-Duo-B,1,+,dataset1
+chr18,34287233,358-Duo-D,1,+,dataset1
+chr18,34289341,358-Duo-D,1,+,dataset1
+chr18,34299012,633-Duo-B,1,+,dataset1
+chr18,34300093,550-Col-A,1,+,dataset1
+#
+# CIS_ID,CIS18:7896048_15k
+# Nearest_gene(s),Wac
+# CIS_span,chr18:7882868-7909246
+# CIS_peak,chr18:7896048
+# EntrezID(s),225131
+# Number_of_associated_insertions,6
+# Scale,15000
+# P-value_raw_by_genome,0
+# Genome_adjusted_p_value,0
+# Peak_height,4.56908937215741
+# Normalised_peak_height,0.594482941772259
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr18,7882868,633-Duo-B,1,+,dataset1
+chr18,7885208,633-Jej-D,1,+,dataset1
+chr18,7887671,550-Col-A,1,+,dataset1
+chr18,7903473,360-Jej-A,1,+,dataset1
+chr18,7908645,299-Duo-A,1,+,dataset1
+chr18,7909245,556-Duo-A,1,+,dataset1
+#
+# CIS_ID,CIS14:34425491_15k
+# Nearest_gene(s),Bmpr1a
+# CIS_span,chr14:34416371-34429070
+# CIS_peak,chr14:34425491
+# EntrezID(s),12166
+# Number_of_associated_insertions,4
+# Scale,15000
+# P-value_raw_by_genome,0
+# Genome_adjusted_p_value,0
+# Peak_height,3.77112692493293
+# Normalised_peak_height,0.490660270685873
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr14,34416371,357-Int-A,1,+,dataset1
+chr14,34424430,360-Duo-A,1,+,dataset1
+chr14,34429069,357-Duo-D,1,+,dataset1
+chr14,34429069,357-Int-D,1,+,dataset1
+#
+# CIS_ID,CISY:1179529_15k
+# Nearest_gene(s),Uty
+# CIS_span,chrY:1179526-1179527
+# CIS_peak,chrY:1179529
+# EntrezID(s),22290
+# Number_of_associated_insertions,1
+# Scale,15000
+# P-value_raw_by_genome,0
+# Genome_adjusted_p_value,0
+# Peak_height,1.00000036490781
+# Normalised_peak_height,0.130109768114041
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chrY,1179526,360-Col-A,1,+,dataset1
+#
+# CIS_ID,CIS16:95390945_15k
+# Nearest_gene(s),Erg
+# CIS_span,chr16:95390244-95390939
+# CIS_peak,chr16:95390945
+# EntrezID(s),13876
+# Number_of_associated_insertions,3
+# Scale,15000
+# P-value_raw_by_genome,3.33066907387547e-16
+# Genome_adjusted_p_value,8.20343792895528e-13
+# Peak_height,3.01462215971341
+# Normalised_peak_height,0.392231647023369
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr16,95390244,360-Duo-A,1,+,dataset1
+chr16,95390763,487-Int-C,1,+,dataset1
+chr16,95390938,487-Int-B,1,+,dataset1
+#
+# CIS_ID,CIS5:125039482_50k
+# Nearest_gene(s),Ncor2
+# CIS_span,chr5:125016135-125135762
+# CIS_peak,chr5:125039482
+# EntrezID(s),20602
+# Number_of_associated_insertions,4
+# Scale,50000
+# P-value_raw_by_genome,6.02534797389254e-07
+# Genome_adjusted_p_value,0.00134305006338065
+# Peak_height,3.00092674359072
+# Normalised_peak_height,0.1904632874698
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr5,125016135,633-Jej-B,1,+,dataset1
+chr5,125033136,360-Duo-D,1,+,dataset1
+chr5,125054178,360-Jej-A,1,+,dataset1
+chr5,125135761,360-Jej-A,1,+,dataset1
+#
+# CIS_ID,CISY:2008322_15k
+# Nearest_gene(s),Zfy2
+# CIS_span,chrY:2008327-2008328
+# CIS_peak,chrY:2008322
+# EntrezID(s),22768
+# Number_of_associated_insertions,1
+# Scale,15000
+# P-value_raw_by_genome,1.89215322488057e-06
+# Genome_adjusted_p_value,0.00466037339288084
+# Peak_height,0.999999747275973
+# Normalised_peak_height,0.130109687754135
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chrY,2008327,358-Duo-D,1,+,dataset1
+#
+# CIS_ID,CISY:1098602_30k
+# Nearest_gene(s),Uty
+# CIS_span,chrY:1099472-1099473
+# CIS_peak,chrY:1098602
+# EntrezID(s),22290
+# Number_of_associated_insertions,1
+# Scale,30000
+# P-value_raw_by_genome,3.10660945224139e-06
+# Genome_adjusted_p_value,0.00726325289934037
+# Peak_height,1.06505236064469
+# Normalised_peak_height,0.0860595437116116
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chrY,1099472,357-Int-B,1,+,dataset1
+#
+# CIS_ID,CIS2:146465852_15k
+# Nearest_gene(s),Ralgapa2
+# CIS_span,chr2:146465224-146468393
+# CIS_peak,chr2:146465852
+# EntrezID(s),241694
+# Number_of_associated_insertions,3
+# Scale,15000
+# P-value_raw_by_genome,5.38109276382315e-06
+# Genome_adjusted_p_value,0.0132536314772964
+# Peak_height,2.98207115087367
+# Normalised_peak_height,0.38799644435681
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr2,146465224,299-Duo-A,1,+,dataset1
+chr2,146465440,360-Jej-D,1,+,dataset1
+chr2,146468392,360-Jej-D,1,+,dataset1
+#
+# CIS_ID,CIS18:73673884_15k
+# Nearest_gene(s),Smad4
+# CIS_span,chr18:73661116-73700446
+# CIS_peak,chr18:73673884
+# EntrezID(s),17128
+# Number_of_associated_insertions,5
+# Scale,15000
+# P-value_raw_by_genome,1.49155110937826e-05
+# Genome_adjusted_p_value,0.0367369038239865
+# Peak_height,3.23391493154342
+# Normalised_peak_height,0.420763768303662
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr18,73661116,550-Duo-L,1,+,dataset1
+chr18,73671063,550-Duo-J,1,+,dataset1
+chr18,73672301,550-Ile-A,1,+,dataset1
+chr18,73695527,360-Jej-A,1,+,dataset1
+chr18,73700445,550-Duo-J,1,+,dataset1
+#
+# CIS_ID,CIS4:73735770_15k
+# Nearest_gene(s),Rasef
+# CIS_span,chr4:73734938-73736337
+# CIS_peak,chr4:73735770
+# EntrezID(s),242505
+# Number_of_associated_insertions,3
+# Scale,15000
+# P-value_raw_by_genome,1.78507169082964e-05
+# Genome_adjusted_p_value,0.043966315745134
+# Peak_height,2.99439350789785
+# Normalised_peak_height,0.389599702786803
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr4,73734938,360-Duo-B,1,+,dataset1
+chr4,73736307,633-Jej-B,1,+,dataset1
+chr4,73736336,357-Int-A,1,+,dataset1
+#
+# CIS_ID,CIS13:30945564_30k
+# Nearest_gene(s),Exoc2
+# CIS_span,chr13:30927503-30962613
+# CIS_peak,chr13:30945564
+# EntrezID(s),66482
+# Number_of_associated_insertions,4
+# Scale,30000
+# P-value_raw_by_genome,2.15973150450299e-05
+# Genome_adjusted_p_value,0.0504945225752799
+# Peak_height,3.65632811764477
+# Normalised_peak_height,0.295442685347391
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr13,30927503,360-Duo-A,1,+,dataset1
+chr13,30942122,360-Jej-D,1,+,dataset1
+chr13,30951625,357-Int-A,1,+,dataset1
+chr13,30962612,360-Jej-D,1,+,dataset1
+#
+# CIS_ID,CIS2:26465695_50k
+# Nearest_gene(s),Notch1
+# CIS_span,chr2:26391337-26497126
+# CIS_peak,chr2:26465695
+# EntrezID(s),18128
+# Number_of_associated_insertions,4
+# Scale,50000
+# P-value_raw_by_genome,2.60554878195318e-05
+# Genome_adjusted_p_value,0.0580776823497364
+# Peak_height,3.15539245236493
+# Normalised_peak_height,0.200266941210206
+# Chromosome,Location,Tumour_ID,Trace_count,Strand,Genotype
+chr2,26391337,360-Jej-A,1,+,dataset1
+chr2,26466047,358-Duo-C,1,+,dataset1
+chr2,26466362,633-Duo-A,1,+,dataset1
+chr2,26497125,360-Jej-A,1,+,dataset1
+#

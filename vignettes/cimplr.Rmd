@@ -1,0 +1,141 @@
+Using CIMPLR to call Common Insertion Sites using bias maps without permutation testing
+========================================================
+
+
+In preparation for running the actual CIMPLR commands, we start by preparing an R environment containing CIMPLR functions and insertion data.
+
+First set your working directory to the root folder of the package. Here we do that by setting the 'Knit' options to create this Vignette; use `setwd('../')` at the console.
+
+```{r opts_knit}
+opts_knit$set(root.dir='../')
+```
+
+Load the necessary libraries and sources of the package.
+
+```{r libraries}
+
+library(Biobase)
+library(GenomicFeatures)
+library(rjson)
+library(multicore)
+library(rtracklayer)
+library(raster)
+
+source('R/AllClasses.R')
+source('R/AllGenerics.R')
+source('R/KSEDistribution.R')
+source('R/core.R')
+source('R/cimplr.R')
+source('R/export-functions.R')
+```
+
+Load your data as a `data.frame` containing at least a `chr` and `location` column.
+
+```{r load_an_iset}
+load('data/test_iset.rda')
+
+head(iset)
+```
+
+
+
+Now we can start with CIMPLR.
+
+
+Step 1: Initialise a CIMPLR object
+-------------------------
+
+We construct a CIMPLR object based on the insertion data and the parameters for the CIMPLR run.
+
+```{r initialize_a_cimplr_object}
+co  <- cimplr(
+  insertions        = iset,
+
+  reference         = 'mm9',
+	pattern           = 'TA',
+  pkse.method       = 'count',
+
+  scales            = log.seq(5000, 500000, 100)[seq(1,50,5)],
+
+  alpha.level       = 0.05,
+	p.adjust.method   = 'bonferroni',
+	p.adjust.n.method = 'n.x',
+	mtf               = 1,
+
+  test.chromosomes.seperately = TRUE,
+	n.cores           = c(scales=10, chromosomes=1),
+	genes.file        = NULL
+)
+```
+
+
+Step 2: Load a bias map
+-------------------------
+
+As a bias map, we load the TA count files under the './references' folder. This bias map is simply the TA site background, but more sophisticated bias maps can be supplied here (link to CreateBiasMap Vignette).
+
+```{r set_reference}
+co <- cimplr.reference(co)
+```
+
+
+
+Step 3: Gaussian Kernel Convolution
+-------------------------
+
+With the insertion data and the bias map loaded and pre-processed within the CIMPLR object, we can now start the kernel convolution, resulting in Kernel Smoothed Estimates (KSEs) for all scales.
+```{r convolve}
+co <- cimplr.convolve(co)
+
+
+# plot(co, scale=10046, chromosome='chr10')
+```
+
+
+
+Step 4: Calculate the threshold
+-------------------------
+
+A seperate step calculates the threshold for the KSE at each scale. This is done using the analytical KSE distribution at a controlled FDR and taking into account multiple scales (link to KSEdistribution Vignette).
+```{r calculcate_threshold}
+co <- cimplr.threshold(co)
+
+# again, but now with thresholds and pvalue, not yet the FDR controlled threshold
+# plot(co, scale=10046, chromosome='chr10')
+
+```
+
+
+
+Step 5: Call CISes
+-------------------------
+
+With the thresholds in place, the last step is to do the CIS calling. This returns two lists of CISes: (1) all CIS for each scale, and (2) the cross scale CIS using the 'cis-cloud-global-maximum' procedure (link to CrossScaleCIScalling Vignette)
+
+```{r call_cis}
+co <- cimplr.call(co)
+
+
+
+# again, now with FDR controlled threshold!!
+# plot(co, scale=10046, chromosome='chr10')
+
+head(co$output$all.cises)
+head(co$output$collapsed.cises)
+```
+
+
+
+Step 6: Output figures and cis list. The export function generates:
+- all_cises.csv
+- collapsed_cises.csv (according to the 'cis-cloud-global-maximum' procedure)
+- a scale space figure per chromosome, focussing on the collapsed CIS regions
+- figures and CIS lists per scale (include.scales=TRUE)
+
+
+```{r export}
+export.cimplr(co, './test_output/', include.scale=TRUE)
+```
+
+
+
