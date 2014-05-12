@@ -52,18 +52,13 @@ We construct a CIMPLR object based on the insertion data and the parameters for 
 co  <- cimplr(
   insertions        = iset,
 
-  reference         = 'mm9',
-	pattern           = 'TA',
-  pkse.method       = 'count',
+  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+  biasmap.type      = 'count',
 
-  scales            = log.seq(5000, 500000, 100)[seq(1,50,5)],
+  scales            = log.seq(500, 500000, 50),
 
-  alpha.level       = 0.05,
-	p.adjust.method   = 'bonferroni',
-	p.adjust.n.method = 'n.x',
-	mtf               = 1,
-
-  test.chromosomes.seperately = TRUE,
+  p.adjust.method   = 'fdr',
+  
 	n.cores           = c(scales=10, chromosomes=1),
 	genes.file        = NULL
 )
@@ -76,7 +71,7 @@ Step 2: Load a bias map
 As a bias map, we load the TA count files under the './references' folder. This bias map is simply the TA site background, but more sophisticated bias maps can be supplied here (link to CreateBiasMap Vignette).
 
 ```{r set_reference}
-co <- cimplr.reference(co)
+co <- cimplr.biasmap(co)
 ```
 
 

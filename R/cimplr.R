@@ -22,23 +22,18 @@
 
 cimplr <- function(
   insertions,
-  exclude.chromosomes=c(),
-  scales=log.seq(5000, 500000, 100),
-  
-  reference='mm9', pattern='TA',
-  pkse.method=c('count', 'density'),
-  stepsize=1000,
-  D=4,
-  
-  alpha.level=.05,
-  p.adjust.n.method=c('n.x', 'n.bgsites', 'n.peaks', 'n.bgsites/scale'),
-  mtf=1,
-  test.chromosomes.seperately=FALSE,
-	
-  p.adjust.method=c("bonferroni", "fdr", "none"),
 
-  genes.file='data/genes.rda',
-	reference.dir='./references',
+  exclude.chromosomes=c(),
+  
+  scales=log.seq(500, 500000, 50),
+  
+  biasmap = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+  biasmap.type = c('count', 'density'),
+
+  alpha=.05,
+  p.adjust.method=c("fdr", "BY", "bonferroni"),
+
+  genes.file='data/genes.bed',
 	n.cores=c(1,1)
 
 	) {
@@ -64,11 +59,8 @@ cimplr <- function(
 	}
 
 
-	pkse.method <- match.arg(pkse.method)
+	biasmap.type <- match.arg(biasmap.type)
 	p.adjust.method <- match.arg(p.adjust.method)
-	p.adjust.n.method <- match.arg(p.adjust.n.method)
-
-
 
 
 	# determine the available chromosomes
@@ -92,7 +84,7 @@ cimplr <- function(
 
 
 	# load the reference info and make a chr.info
-	chr.info <- read.delim(file=paste(reference.dir, '/', reference, '.', pattern, '.txt', sep=''), row.names=1)
+	chr.info <- loadBiasmapInfo(biasmap)
 	chr.info <- chr.info[chromosomes, ]
 	chr.info$n.insertions=sapply(insertions, length)
 
@@ -176,8 +168,8 @@ cimplr.replace_insertions <- function(cimplr.object, new.insertions) {
 }
 
 
-cimplr.reference <- function(cimplr.object) {
-	message('cimplr.reference()')
+cimplr.biasmap <- function(cimplr.object) {
+	message('cimplr.biasmap()')
 
 	with(cimplr.object$input, {	
 
@@ -187,24 +179,12 @@ cimplr.reference <- function(cimplr.object) {
 		#
 		scale.objects <- mclapply(scales, mc.cores=n.cores[1], FUN=function(scale) {
 			
-			message('cimplr.reference() - load reference scale = ', scale)
+			message('cimplr.biasmap() - load biapmap scale = ', scale)
+			
+      wig.file <- paste(biasmap, '/', biasmap.type, '-scale', as.integer(round(scale)), '.wig', sep='')
+			bgranges <- import.wig(con=wig.file, asRangedData = biasmap.type == 'density')
 
-			if (pkse.method == 'count') {
-				wig.count.file <- paste(reference.dir, '/', reference, '.count',
-					pattern, '.scale', as.integer(round(scale)), '.D', D, '.stepsize', stepsize, '.wig', sep=''
-				)
-
-				bgranges <- import.wig(con=wig.count.file, asRangedData=FALSE)
-			}
-
-			if (pkse.method == 'density') {
-				wig.density.file <- paste(reference.dir, '/', reference, '.density',
-					pattern, '.scale', as.integer(round(scale)), '.stepsize', stepsize, '.wig', sep=''
-				)
-				bgranges <- import.wig(con=wig.density.file)
-			}
-
-			chr.objects <- mclapply(chromosomes, mc.cores=n.cores[2], FUN=function(chr) {
+      chr.objects <- mclapply(chromosomes, mc.cores=n.cores[2], FUN=function(chr) {
 	
 				x  <- start(bgranges)[as.logical(seqnames(bgranges) == chr)]
 				bg <- score(bgranges)[as.logical(seqnames(bgranges) == chr)]
@@ -325,7 +305,7 @@ cimplr.threshold <- function(cimplr.object, alpha) {
       
   		scale.object <- mclapply(scale.object, mc.cores=n.cores[2], FUN=function(chr.object) {
 				if (is.null(chr.object[['th']])) {
-					message('cimplr.convolve() - calculcate threshold (scale = ', scale, ', chr = ', chr.object$chr, ')')
+					message('cimplr.threshold() - calculcate threshold (scale = ', scale, ', chr = ', chr.object$chr, ')')
 					chr.object <- calc.threshold(chr.object, kse_dist, alpha=fdr.pval)
 				}
 				

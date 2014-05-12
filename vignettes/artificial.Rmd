@@ -13,26 +13,20 @@ library(raster)
 library(RMySQL)
 
 
-source('lib/AllClasses.R')
-source('lib/AllGenerics.R')
-source('lib/InsertionSet.R')
-source('lib/KSEDistribution.R')
+source('R/AllClasses.R')
+source('R/AllGenerics.R')
+source('R/KSEDistribution.R')
 
-source('lib/core.R')
-source('lib/cimplr.R')
-source('lib/artificial_db.R')
+source('R/core.R')
+source('R/cimplr.R')
+source('R/artificial_db.R')
 
-
-
-# DELETE FROM `evaluation` WHERE `evaluation_id` > 7803;
-# DELETE FROM `evaluation_artificial_cis` WHERE `evaluation_id` > 7803;
-# DELETE FROM `evaluation_predicted_cis` WHERE `evaluation_id` > 7803;
-
-
-#p.adjust.method <- 'n.peaks'
+```
 
 
 
+
+```{r}
 
 conn <- dbConnect(drv=MySQL(max.con=100), host='medoid', dbname='im_simulation_db', user='igkc', password='igkc')
 
@@ -43,15 +37,15 @@ iset <- getArtificialIset(conn, artificial_iset_ids[500])
 
 co  <- cimplr(
   insertions        = iset,
-	reference         = 'mm9',
-	pattern           = 'TA',
-	scales            = log.seq(5000, 500000, 100)[seq(1,50,5)],
-	pkse.method       = 'count',
-	alpha.level       = 0.05,
-	p.adjust.method   = 'bonferroni',
-	p.adjust.n.method = 'n.x',
-	mtf               = 1,
-	test.chromosomes.seperately = TRUE,
+  
+  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+  biasmap.type      = 'count',
+
+  scales            = log.seq(500, 500000, 50),
+  
+  alpha             = 0.05,
+  p.adjust.method   = 'fdr',
+
 	n.cores           = c(scales=10, chromosomes=1),
 	genes.file        = NULL
 )
@@ -61,7 +55,7 @@ caller <- c(
 	list(
 		method='cimplr'
 	),
-	co$input[c('reference', 'pattern', 'scales', 'pkse.method', 'alpha.level', 'p.adjust.method', 'p.adjust.n.method', 'mtf')]
+	co$input[c('biasmap', 'biasmap.type', 'scales', 'alpha', 'p.adjust.method')]
 )
 
 caller$scales <- .formatScales(caller$scales)
@@ -69,29 +63,30 @@ caller$scales <- .formatScales(caller$scales)
 sql <- paste("DELETE FROM `evaluation` WHERE caller = '", toJSON(caller), "'", sep='')
 dbGetQuery(conn, sql)
 dbDisconnect(conn)
+```
 
 
-co <- cimplr.reference(co)
-#co$input$n.cores <- c(scales=1, chromosomes=1)
-co <- cimplr.convolve(co) # to calulate threshold
 
-#stop()
 
-message('')
-message('starting loop for ', length(artificial_iset_ids), " iset's")
-message('')
+```{r}
 
+
+co <- cimplr.biasmap(co)
+co <- cimplr.convolve(co)
+
+
+
+
+```
+
+
+
+
+```{r}
 
 artificial_iset_ids <- sample(artificial_iset_ids)
-
-
-#$ 1000:Class 'try-error'  atomic [1:1] Error in unique(do.call("rbind", lapply(1:nrow(maxXY), function(i) { : 
-#  error in evaluating the argument 'x' in selecting a method for function 'unique': Error: sum(idx) == 1 is not TRUE
-#
 artificial_iset_ids <- 1000
 
-#artificial_iset_ids <- 1085
-source('scripts/cimplr_artificial_loop.R')
 mcresult <- mclapply (artificial_iset_ids, mc.cores=10, function(artificial_iset_id) {
   
 	progress <- paste(which(artificial_iset_ids == artificial_iset_id), '/', length(artificial_iset_ids), sep='')

@@ -1,7 +1,7 @@
 
 
 loadBiasmapInfo <- function(biasmap) {
-  read.delim(file=paste(biasmap.dir, '/info.txt', sep=''), row.names=1)
+  read.delim(file=paste(biasmap, '/info.txt', sep=''), row.names=1)
 }
 
 buildBiasmapFromBSgenome <- function(
