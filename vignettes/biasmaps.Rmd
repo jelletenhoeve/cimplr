@@ -2,10 +2,14 @@ CIMPLR - Building Biasmaps
 ========================================================
 
 
-```{r}
-# Build background bed file
+```{r opts_knit}
+opts_knit$set(root.dir='../')
+```
 
 
+
+
+```{r load_libs}
 library(Biobase)
 library(BSgenome.Mmusculus.UCSC.mm9)
 library(GenomicFeatures)
@@ -13,24 +17,26 @@ library(rjson)
 library(multicore)
 library(rtracklayer)
 
-source('lib/core.R')
-source('lib/biasmaps.R')
+source('R/AllClasses.R')
+source('R/AllGenerics.R')
+source('R/KSEDistribution.R')
+source('R/core.R')
+source('R/biasmaps.R')
+```
 
 
-scales <- log.seq(5000, 500000, 100)
-#scales <- 30000
 
-references.dir <- 'references'
-
-
-reference  <- buildReferences(
-  pattern = 'TA',
-	bsgenome = get('Mmusculus'),
-	chromosomes = seqnames(Mmusculus)[1:21],
-	scales = scales,
-	n.cores=c(scales=1,chromosome=1),
-	output.dir = references.dir
+```{r build_biasmap}
+biasmap_name <- buildBiasmapFromBSgenome(
+	bsgenome     = get('Mmusculus'),
+  pattern      = 'TA',
+	chromosomes  = 'chr10',
+	scales       = log.seq(500, 500000, 50),
+	n.cores      = c(scales=1,chromosome=1),
+	biasmaps.dir = './biasmaps_chr10'
 )
+
+biasmap_name
 ```
 
 
