@@ -20,22 +20,21 @@
 #   n.cores:                      a vector of length 2. First element is used for loops over scales, second element for loops over chromosomes
 #
 
-cimplr <- function(insertions,
-	reference='mm9', pattern='TA',
+cimplr <- function(
+  insertions,
+  exclude.chromosomes=c(),
+  scales=log.seq(5000, 500000, 100),
+  
+  reference='mm9', pattern='TA',
+  pkse.method=c('count', 'density'),
+  stepsize=1000,
+  D=4,
+  
+  alpha=.05,
+	
+  p.adjust.method=c("bonferroni", "fdr", "none"),
 
-	exclude.chromosomes=c(),
-
-	scales=log.seq(5000, 500000, 100),
-	pkse.method=c('count', 'density'),
-	alpha.level=.05,
-	p.adjust.method=c("bonferroni", "fdr", "none"),
-	p.adjust.n.method=c('n.x', 'n.bgsites', 'n.peaks', 'n.bgsites/scale'),
-	mtf=1,
-	test.chromosomes.seperately=FALSE,
-	stepsize=1000,
-	D=4,
-
-	genes.file='data/genes.rda',
+  genes.file='data/genes.rda',
 	reference.dir='./references',
 	n.cores=c(1,1)
 
@@ -778,8 +777,6 @@ collapse.cis <- function(scale.objects, scales, chr) {
 	}
 	cises
 }
-
-
 
 
 annotate.cis <- function(cises, genes) {

@@ -1,6 +1,7 @@
-Using CIMPLR to call Common Insertion Sites using bias maps without permutation testing
+CIMPLR
 ========================================================
 
+A package to call Common Insertion Sites using biasmaps without permutation testing.
 
 In preparation for running the actual CIMPLR commands, we start by preparing an R environment containing CIMPLR functions and insertion data.
 
@@ -26,7 +27,7 @@ source('R/AllGenerics.R')
 source('R/KSEDistribution.R')
 source('R/core.R')
 source('R/cimplr.R')
-source('R/export-functions.R')
+source('R/cimplr-export.R')
 ```
 
 Load your data as a `data.frame` containing at least a `chr` and `location` column.

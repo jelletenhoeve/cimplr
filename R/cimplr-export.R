@@ -212,3 +212,42 @@ export.cimplr <- function(cimplr.object, output.dir, include.scales=TRUE) {
   
 }
 
+
+
+# @TODO: to be changed to Alistair's code
+getCISMatrix <- function(cimplAnalysis, ciss) {
+  df <- do.call('rbind', lapply(cimplAnalysis@chromosomes, function(chr) {
+    chr.idx <- which(cimplAnalysis@chromosomes == chr)
+    
+    
+    chr_data <- cimplAnalysis@cimplObjects[[chr.idx]][[1]]@data
+    
+    cisids <- do.call('cbind', lapply(cimplAnalysis@scales, function(kw) {
+      
+      kw.idx <- which(cimplAnalysis@scales == kw)
+      cimplObject <- cimplAnalysis@cimplObjects[[chr.idx]][[kw.idx]]
+      
+      # snap insertions to peaks (see http://bioinformatics.nki.nl/forum/viewtopic.php?f=4&t=19)
+      locations <- sapply(locations, function(loc) round(peaks[which.min(abs(peaks - loc ))]))
+      
+      snappedLocs <- .snapToPeaks(chr_data$location, cimplObject@peaks$x)
+      
+      insertion2cis <- rep('', dim(chr_data)[1])
+      
+      ciss.idx <- which(ciss$chromosome == chr & ciss$scale == kw)
+      for (i in ciss.idx) {
+        #				insertion2cis[snappedLocs >= ciss$start[i] & snappedLocs <= ciss$end[i]] <- rownames(ciss)[i]
+        #				insertion2cis[snappedLocs == ciss$peak_location[i]] <- rownames(ciss)[i]
+        locs.idx <- snappedLocs >= ciss$start[i] & snappedLocs <= ciss$end[i]
+        
+        insertion2cis[locs.idx] <- paste(insertion2cis[locs.idx], rownames(ciss)[i], sep='|')
+      }
+      
+      substring(insertion2cis, 2)
+    }))
+    colnames(cisids) <- cimplAnalysis@scales
+    data.frame(chr_data, cisids, stringsAsFactors=FALSE)
+  }))
+}
+
+

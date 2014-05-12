@@ -1,0 +1,36 @@
+CIMPLR - Building Biasmaps
+========================================================
+
+
+```{r}
+# Build background bed file
+
+
+library(Biobase)
+library(BSgenome.Mmusculus.UCSC.mm9)
+library(GenomicFeatures)
+library(rjson)
+library(multicore)
+library(rtracklayer)
+
+source('lib/core.R')
+source('lib/biasmaps.R')
+
+
+scales <- log.seq(5000, 500000, 100)
+#scales <- 30000
+
+references.dir <- 'references'
+
+
+reference  <- buildReferences(
+  pattern = 'TA',
+	bsgenome = get('Mmusculus'),
+	chromosomes = seqnames(Mmusculus)[1:21],
+	scales = scales,
+	n.cores=c(scales=1,chromosome=1),
+	output.dir = references.dir
+)
+```
+
+
