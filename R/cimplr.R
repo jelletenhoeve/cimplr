@@ -30,7 +30,10 @@ cimplr <- function(
   stepsize=1000,
   D=4,
   
-  alpha=.05,
+  alpha.level=.05,
+  p.adjust.n.method=c('n.x', 'n.bgsites', 'n.peaks', 'n.bgsites/scale'),
+  mtf=1,
+  test.chromosomes.seperately=FALSE,
 	
   p.adjust.method=c("bonferroni", "fdr", "none"),
 
@@ -777,6 +780,8 @@ collapse.cis <- function(scale.objects, scales, chr) {
 	}
 	cises
 }
+
+
 
 
 annotate.cis <- function(cises, genes) {
