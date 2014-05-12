@@ -1,6 +1,8 @@
 
 
-
+loadBiasmapInfo <- function(biasmap) {
+  read.delim(file=paste(biasmap.dir, '/info.txt', sep=''), row.names=1)
+}
 
 buildBiasmapFromBSgenome <- function(
   bsgenome,
@@ -21,8 +23,8 @@ buildBiasmapFromBSgenome <- function(
 	names(bgsites) <- chromosomes
 
   
-  # Create the output dir
-  output.dir <- paste(biasmaps.dir, '/bsgenomes/', providerVersion(bsgenome), '_', pattern, sep='')
+  # Create the output dir, f.e. bsgenome-mm9-TA-S100-D4
+  output.dir <- paste(biasmaps.dir, '/bsgenomes-', providerVersion(bsgenome), '-', pattern, '-stepsize', stepsize, '-D', D, sep='')
   dir.create(output.dir, showWarnings=FALSE, recursive=TRUE)
 	
   
@@ -68,8 +70,8 @@ buildBiasmapFromBSgenome <- function(
 		})
 
 		# write to wigs
-		wig.count.file <- paste(output.dir, '/count-scale', as.integer(round(scale)), '.D', D, '.stepsize', stepsize, '.wig', sep='')
-		wig.density.file <- paste(output.dir, '/density-scale', as.integer(round(scale)), '.stepsize', stepsize, '.wig', sep='')
+		wig.count.file <- paste(output.dir, '/count-scale', as.integer(round(scale)), '.wig', sep='')
+		wig.density.file <- paste(output.dir, '/density-scale', as.integer(round(scale)), '.wig', sep='')
 
 		export.wig(con=wig.density.file, do.call('c', lapply(grList, '[[', 'grdens')))
 		export.wig(con=wig.count.file, do.call('c', lapply(grList, '[[', 'grcount')))
