@@ -19,6 +19,7 @@ source('R/KSEDistribution.R')
 
 source('R/core.R')
 source('R/cimplr.R')
+source('R/biasmaps.R')
 source('R/artificial_db.R')
 
 ```
@@ -41,12 +42,12 @@ co  <- cimplr(
   biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
   biasmap.type      = 'count',
 
-  scales            = log.seq(500, 500000, 50),
+  scales            = log.seq(500, 500000, 50)[1:2],
   
   alpha             = 0.05,
   p.adjust.method   = 'fdr',
 
-	n.cores           = c(scales=10, chromosomes=1),
+	n.cores           = c(scales=1, chromosomes=1),
 	genes.file        = NULL
 )
 

@@ -32,7 +32,7 @@ biasmap_name <- buildBiasmapFromBSgenome(
   pattern      = 'TA',
 	chromosomes  = 'chr10',
 	scales       = log.seq(500, 500000, 50),
-	n.cores      = c(scales=1,chromosome=1),
+	n.cores      = c(chromosome=1, scales=50),
 	biasmaps.dir = './biasmaps_chr10'
 )
 

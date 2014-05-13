@@ -31,10 +31,13 @@ cimplr <- function(
   biasmap.type = c('count', 'density'),
 
   alpha=.05,
-  p.adjust.method=c("fdr", "BY", "bonferroni"),
+  p.adjust.method=c("fdr", "BY", "bonferroni", "none"),
 
+  kNormal = 30,
+  
   genes.file='data/genes.bed',
 	n.cores=c(1,1)
+  
 
 	) {
 
@@ -54,7 +57,7 @@ cimplr <- function(
 	}
 
 
-	if (alpha.level <= 0 | alpha.level >= 1) {
+	if (alpha <= 0 | alpha >= 1) {
 		stop("Need to provide 0 < 'alpha.level' < 1.")
 	}
 
@@ -62,15 +65,9 @@ cimplr <- function(
 	biasmap.type <- match.arg(biasmap.type)
 	p.adjust.method <- match.arg(p.adjust.method)
 
-
 	# determine the available chromosomes
 	chromosomes <- unique(as.character(insertions$chr))
 	chromosomes <- chromosomes[!chromosomes %in% exclude.chromosomes]
-	#chromosomes <- c('chr2', 'chr3', 'chr15', 'chr18')
-	#chromosomes <- c('chr2')
-	#chromosomes <- c('chr2', 'chr3', 'chr4')
-
-
 
 	# make 'insertions' a list of insertions
 	insertions.org <- insertions
@@ -78,24 +75,19 @@ cimplr <- function(
 	insertions  <- split(insertions$location, insertions$chr)[chromosomes]
 	insertions  <- insertions[chromosomes]
 
-
-
-
-
-
-	# load the reference info and make a chr.info
+	# load the biasmap info
 	chr.info <- loadBiasmapInfo(biasmap)
 	chr.info <- chr.info[chromosomes, ]
 	chr.info$n.insertions=sapply(insertions, length)
 
-	#chr.info.totals <- sapply(chr.info, sum)
 	n.insertions.total <- sum(chr.info[[3]])
 	n.bgsites.total <- sum(chr.info[[2]])
 	n.bp.total <- sum(chr.info[[1]])
-
+  
+	D <- as.numeric(substring(rev(strsplit(biasmap, '-')[[1]])[1], 2))
+  
+  # bundle all inputs
 	input <- as.list(environment())
-
-
 
 
 	#
@@ -113,7 +105,7 @@ cimplr <- function(
 }
 
 
-
+# replaces the instertions, leaving the chromosome intact.
 cimplr.replace_insertions <- function(cimplr.object, new.insertions) {
 
 	message('cimplr.replace_insertions()')
@@ -125,20 +117,16 @@ cimplr.replace_insertions <- function(cimplr.object, new.insertions) {
 		insertions  <- split(insertions$location, insertions$chr)[chromosomes]
 		insertions  <- insertions[chromosomes]
 
-
-
-
-
-
-		# load the reference info and make a chr.info
-		chr.info <- read.delim(file=paste(reference.dir, '/', reference, '.', pattern, '.txt', sep=''), row.names=1)
+		# load the biasmap info
+		chr.info <- loadBiasmapInfo(biasmap)
 		chr.info <- chr.info[chromosomes, ]
 		chr.info$n.insertions=sapply(insertions, length)
-
-		#chr.info.totals <- sapply(chr.info, sum)
+		
 		n.insertions.total <- sum(chr.info[[3]])
 		n.bgsites.total <- sum(chr.info[[2]])
 		n.bp.total <- sum(chr.info[[1]])
+		
+		D <- as.numeric(substring(rev(strsplit(biasmap, '-')[[1]])[1], 2))
 
 		input <- as.list(environment())
 
@@ -150,7 +138,13 @@ cimplr.replace_insertions <- function(cimplr.object, new.insertions) {
 		scale.objects <- mclapply(cimplr.object$data, mc.cores=n.cores[1], FUN=function(scale.object) {
 			mclapply(scale.object, mc.cores=n.cores[2], FUN=function(chr.object) {
 				if ('th' %in% names(chr.object)) {
-					chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "th")]
+          
+          if (p.adjust.method == 'fdr' | p.adjust.method == 'BY') {
+            message("cimplr.replace_insertions() - removing threshold because it depends on the data (in case of 'fdr' and 'BY')")
+            chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total")]
+          } else {
+					  chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "th", "corrected.alpha")]
+          }
 				} else {
 					chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total")]
 				}
@@ -179,7 +173,7 @@ cimplr.biasmap <- function(cimplr.object) {
 		#
 		scale.objects <- mclapply(scales, mc.cores=n.cores[1], FUN=function(scale) {
 			
-			message('cimplr.biasmap() - load biapmap scale = ', scale)
+			message('cimplr.biasmap() - load biasmap scale = ', scale)
 			
       wig.file <- paste(biasmap, '/', biasmap.type, '-scale', as.integer(round(scale)), '.wig', sep='')
 			bgranges <- import.wig(con=wig.file, asRangedData = biasmap.type == 'density')
@@ -216,7 +210,7 @@ cimplr.biasmap <- function(cimplr.object) {
 
 		kse.distributions <- mclapply(scales, mc.cores=n.cores[1], FUN=function(scale) {
 			message('cimplr.reference() - compute kse distribution scale = ', scale)
-			new('KSEDistribution', scale=scale, D=D, kNormal=30, verbose=FALSE)
+			new('KSEDistribution', scale=scale, D=D, kNormal=kNormal, verbose=FALSE)
 		})
 
 		names(kse.distributions) <- .formatScales(scales)
@@ -249,8 +243,8 @@ cimplr.convolve <- function(cimplr.object) {
 			# Calculation kse objects for each chromosome
 			#
 			scale.object <- mclapply(scale.object, mc.cores=n.cores[2], FUN=function(chr.object) {
-				message('cimplr.convolve() - calculcate KSE (scale = ', scale, ', chr = ', chr.object$chr, ')')
-				calc.kse(chr.object, kse_dist, insertions[[chr.object$chr]], pkse.method, n.insertions.total, n.bgsites.total, alpha.level, p.adjust.method, p.adjust.n.method, mtf, test.chromosomes.seperately)
+				message('cimplr.convolve() - calculate KSE (scale = ', scale, ', chr = ', chr.object$chr, ')')
+				calc.kse(chr.object, kse_dist, insertions[[chr.object$chr]], pkse.method=biasmap.type, n.insertions.total, n.bgsites.total, alpha, p.adjust.method)
 			})
 
 			
@@ -289,11 +283,11 @@ cimplr.convolve <- function(cimplr.object) {
 }
 
 
-cimplr.threshold <- function(cimplr.object, alpha) {
+cimplr.threshold <- function(cimplr.object) {
   message('cimplr.threshold()')
 
   # step 1: calculate the FDR rate
-  fdr.pval <- calc.fdr.pval(cimplr.object)
+  corrected.alpha <- calc.corrected.alpha(cimplr.object)
   
   
   with(cimplr.object$input, {
@@ -305,14 +299,14 @@ cimplr.threshold <- function(cimplr.object, alpha) {
       
   		scale.object <- mclapply(scale.object, mc.cores=n.cores[2], FUN=function(chr.object) {
 				if (is.null(chr.object[['th']])) {
-					message('cimplr.threshold() - calculcate threshold (scale = ', scale, ', chr = ', chr.object$chr, ')')
-					chr.object <- calc.threshold(chr.object, kse_dist, alpha=fdr.pval)
+					message('cimplr.threshold() - calculate threshold (scale = ', scale, ', chr = ', chr.object$chr, ')')
+					chr.object <- calc.threshold(chr.object, kse_dist, alpha=corrected.alpha)
 				}
 				
-				message('cimplr.convolve() - calculcate ratio (scale = ', scale, ', chr = ', chr.object$chr, ')')
+				message('cimplr.convolve() - calculate ratio (scale = ', scale, ', chr = ', chr.object$chr, ')')
 				chr.object$ratio <- chr.object$inskse / chr.object$th
 				chr.object$significant <- chr.object$inskse > chr.object$th
-				
+				chr.object$corrected.alpha <- corrected.alpha
 				chr.object
 			})
     
@@ -324,8 +318,7 @@ cimplr.threshold <- function(cimplr.object, alpha) {
     list(
       input = cimplr.object$input,
       data  = scale.objects,
-      kse.distributions = cimplr.object$kse.distributions,
-      fdr.pval = fdr.pval
+      kse.distributions = cimplr.object$kse.distributions
     )
     
   })
@@ -415,7 +408,7 @@ cimplr.call <- function(cimplr.object) {
 #
 # Does the kernel convolution
 #
-calc.kse <- function(chr.object, kse_dist, locs, pkse.method, n.insertions.total, n.bgsites.total, alpha.level, p.adjust.method, p.adjust.n.method, mtf, test.chromosomes.seperately) {
+calc.kse <- function(chr.object, kse_dist, locs, pkse.method, n.insertions.total, n.bgsites.total, alpha, p.adjust.method) {
 	with(chr.object, {
 		
 		# insertion density
@@ -428,50 +421,24 @@ calc.kse <- function(chr.object, kse_dist, locs, pkse.method, n.insertions.total
 		peaks    <- x[peak.idx]
 		n.peaks  <- length(peaks)
 
-		# MT correction
-		if (test.chromosomes.seperately) {
-			#'n.x', 'n.bgsites', 'n.peaks', 'n.bgsites/scale', 'none'
-
-			p.adjust.n <- switch(p.adjust.n.method,
-				n.x               = length(x), 
-				n.bgsites         = n.bgsites,
-				n.peaks           = n.peaks,
-				'n.bgsites/scale' = n.bgsites / kse_dist@scale
-			)
-		} else {
-			p.adjust.n <- switch(p.adjust.n.method,
-				n.x               = length(x), 
-				n.bgsites         = n.bgsites.total,
-				n.peaks           = n.peaks.total,
-				'n.bgsites/scale' = n.bgsites.total / kse_dist@scale
-			)
-		}
-
-		adjusted.alpha.level <- alpha.level / p.adjust.n / mtf
-
-		p  <- rep(NA, length(x))
-		idx <- bg > 0
+    # p.values
+    p  <- rep(NA, length(x))
+		idx <- bg > 0 # optimisation 1
     
-		#p[idx] <- 1- pkse(kse_dist, x=x[idx], n=bg[idx], p=n.insertions.total / n.bgsites.total)
 		p[idx] <- 1 - pkse(kse_dist, x=inskse[idx], n=bg[idx], p=n.insertions.total / n.bgsites.total)
-		
     
 		c(
 			chr.object,
 			list(
-				locs        = locs,
+				locs               = locs,
 				n.insertions.total = n.insertions.total,
-				inskse      = inskse,
-        p           = p,
-				peaks       = peaks,
-				n.peaks     = n.peaks,
-				pkse.method = pkse.method,
-				p.adjust.n           = p.adjust.n,
-				p.adjust.method      = p.adjust.method,
-				p.adjust.n.method    = p.adjust.n.method,
-				mtf                  = mtf,
-				alpha.level          = alpha.level,
-				adjusted.alpha.level = adjusted.alpha.level
+				inskse             = inskse,
+        p                  = p,
+				peaks              = peaks,
+				n.peaks            = n.peaks,
+				pkse.method        = pkse.method,
+				p.adjust.method    = p.adjust.method,
+				alpha              = alpha
 			)
 		)
 	})
@@ -485,46 +452,50 @@ calc.kse <- function(chr.object, kse_dist, locs, pkse.method, n.insertions.total
 
 
 
-calc.fdr.pval <- function(cimplr.object) {
-  message('calc.fdr.pval()')
+calc.corrected.alpha <- function(cimplr.object) {
   
   with(cimplr.object$input, {
+    
+    if (p.adjust.method == 'none') {
+      return(alpha)
+    }
+    
+    message('calc.corrected.alpha() - p.adjust.method = ', p.adjust.method)
+    # p.adjust.method=c("fdr", "BY", "bonferroni"),
+    
     # contains all pvalues across all scales and all chromosomes
     all.pvals <- sapply(cimplr.object$data, function(scale.object) sapply(scale.object, '[[', 'p'))
-
     
-    p.sorted <- sort(all.pvals, na.last=NA) # note NA's are removed. p is NA when the background is < 0
-    
-    m <- length(p.sorted)
-    k <- 1:m
-    
-    th <- k * alpha.level / m
-    
-    fdr.pval.idx <- which(!p.sorted < th)[1]
-    
-    fdr.pval <- p.sorted[fdr.pval.idx]
-        
-    fdr.pval
+    if (p.adjust.method == 'bonferroni') {
+      corrected.alpha <- alpha / m
+    } else {
+      p.sorted <- sort(all.pvals, na.last=NA) # note NA's are removed. p is NA when the background is < 0
+      
+      m <- length(p.sorted)
+      k <- 1:m
+      cm <- sum(1/(1:m))
+      
+      th <- switch(p.adjust.method,
+        fdr = k * alpha / m,
+        BY  = k * alpha / (m * cm)
+      )
+      
+      corrected.alpha.idx <- which(!p.sorted < th)[1]
+      corrected.alpha <- p.sorted[corrected.alpha.idx]
+    }
+    corrected.alpha
   })
-  
 }
 
 
+# to be used for corrected alpha's
 calc.threshold <- function(chr.object, kse_dist, alpha) {
 	with(chr.object, {
 
 		th <- rep(NA, length(x))
 
     idx <- bg > 0
-	
-		#if (p.adjust.method == 'bonferroni') {
-#
-#			th[idx] <- kseThreshold(kse_dist, n=bg[idx], p=n.insertions.total / n.bgsites.total, max.kse=ceiling(max(inskse[idx])) * 2, alpha=adjusted.alpha.level, max.k=120, n.unique.p=2000, n.x=1000, summed.weights.margin = 1e-15)
-
-#		} else if (p.adjust.method == 'fdr') {
-
-      th[idx] <- kseThreshold(kse_dist, n=bg[idx], p=n.insertions.total / n.bgsites.total, max.kse=ceiling(max(inskse[idx])) * 2, alpha=alpha, max.k=120, n.unique.p=2000, n.x=1000, summed.weights.margin = 1e-15)
-#		}
+    th[idx] <- kseThreshold(kse_dist, n=bg[idx], p=n.insertions.total / n.bgsites.total, max.kse=ceiling(max(inskse[idx])) * 2, alpha=alpha, max.k=120, n.unique.p=2000, n.x=1000, summed.weights.margin = 1e-15)
 
 		c(
 			chr.object,
@@ -588,12 +559,9 @@ calc.cis <- function(chr.object) {
 				peak.ratio      = peak.ratio,
 				n.insertions.within.3.sigma = n.insertions.within.3.sigma,
 				scale           = scale,
-				alpha.level     = alpha.level,
-				p.adjust.n      = p.adjust.n,
+				alpha           = alpha,
 				p.adjust.method = p.adjust.method,
-				p.adjust.n.method = p.adjust.n.method,
-				mtf             = mtf,
-				adjusted.alpha.level = adjusted.alpha.level,
+				corrected.alpha = corrected.alpha,
 				stringsAsFactors=FALSE
 			)
 
@@ -605,13 +573,6 @@ calc.cis <- function(chr.object) {
 		c(
 			chr.object,
 			list(
-#				p.adjust.n           = p.adjust.n,
-#				p.adjust.method      = p.adjust.method,
-#				p.adjust.n.method    = p.adjust.n.method,
-#				mtf                  = mtf,
-#				adjusted.alpha.level = adjusted.alpha.level,
-#				significant = significant,
-#				th          = th,
 				cises       = cises
 			)
 		)
@@ -760,6 +721,8 @@ collapse.cis <- function(scale.objects, scales, chr) {
 	}
 	cises
 }
+
+
 
 
 
