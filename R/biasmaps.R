@@ -73,12 +73,19 @@ buildBiasmapFromBSgenome <- function(
 		wig.count.file <- paste(output.dir, '/count-scale', as.integer(round(scale)), '.wig', sep='')
 		wig.density.file <- paste(output.dir, '/density-scale', as.integer(round(scale)), '.wig', sep='')
 
+		cat('Writing .wig file for scale=', scale, '...', '\n', sep='')
 		export.wig(con=wig.density.file, do.call('c', lapply(grList, '[[', 'grdens')))
 		export.wig(con=wig.count.file, do.call('c', lapply(grList, '[[', 'grcount')))
     
     # write to BigWig
+		cat('Writing .bw files for scale=', scale, '...', '\n', sep='')
 		wigToBigWig(wig.density.file, seqinfo(bsgenome)[chromosomes])
 		wigToBigWig(wig.count.file, seqinfo(bsgenome)[chromosomes])
+    
+    # and remove the wig
+		file.remove(wig.density.file)
+		file.remove(wig.count.file)
+		
 	})
   
   # return the name
