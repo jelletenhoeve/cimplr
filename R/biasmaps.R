@@ -75,6 +75,10 @@ buildBiasmapFromBSgenome <- function(
 
 		export.wig(con=wig.density.file, do.call('c', lapply(grList, '[[', 'grdens')))
 		export.wig(con=wig.count.file, do.call('c', lapply(grList, '[[', 'grcount')))
+    
+    # write to BigWig
+		wigToBigWig(wig.density.file, seqinfo(bsgenome)[chromosomes])
+		wigToBigWig(wig.count.file, seqinfo(bsgenome)[chromosomes])
 	})
   
   # return the name
