@@ -1,3 +1,43 @@
+plot.chrscale <- function(cimplr.object, chr, scale=NULL, type=c('kse', 'bg', 'p', 'ratio')) {
+  
+  
+  type <- match.arg(type)
+  scale <- .formatScales(scale)
+  
+  with(c(cimplr.object$input, cimplr.object$data[[paste(chr, scale, sep='.')]], cimplr.object$output), {
+    
+    
+    if (type == 'kse') {
+    
+      plot(x, inskse, type='l', xlab=chr, ylab='kse')
+      
+      if (exists('th'))
+        lines(x, th, col='red')
+    }
+
+    if (type == 'bg') {
+      plot(x, bg , type='l', xlab=chr, ylab=biasmap.type, main=biasmap)
+    }
+    
+    
+    if (type == 'p') {
+      plot(x, -log10(p), type='l', xlab=chr, ylab='-log(p)')
+      #  				abline(h=-log10(alpha.level / n.peaks.total), lwd=2, col='blue')
+      #					abline(h=-log10(alpha.level / n.bgsites.total), lwd=2, col='red')
+      #  abline(h=-log10(.05), col='red')
+      #	abline(h=-log10(.01), col='red')
+      #	abline(h=-log10(.001), col='red')
+    }
+      
+    if (type == 'ratio') {
+      plot(x, ratio, type='l', xlab=chr, ylab='ratio')
+      abline(h= 1, lwd=2, col='red')
+    }
+    
+  })
+  
+}
+
 
 
 

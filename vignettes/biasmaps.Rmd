@@ -25,15 +25,18 @@ source('R/biasmaps.R')
 ```
 
 
+Building a BiasMap for TA sites using the mm9 mouse genome reference.
+
 
 ```{r build_biasmap}
 biasmap_name <- buildBiasmapFromBSgenome(
 	bsgenome     = get('Mmusculus'),
   pattern      = 'TA',
-	chromosomes  = 'chr10',
+	chromosomes  = c(paste('chr', 1:19, sep=''), 'chrX', 'chrY'),
 	scales       = log.seq(500, 500000, 50),
-	n.cores      = c(chromosome=1, scales=50),
-	biasmaps.dir = './biasmaps_chr10'
+	n.cores      = c(chromosome=7, scales=7),
+  stepsize     = 1000,
+	biasmaps.dir = './biasmaps'
 )
 
 biasmap_name

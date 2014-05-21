@@ -27,13 +27,16 @@ source('R/AllGenerics.R')
 source('R/KSEDistribution.R')
 source('R/core.R')
 source('R/cimplr.R')
+source('R/cimplr-calc.R')
 source('R/cimplr-export.R')
+source('R/biasmaps.R')
 ```
 
 Load your data as a `data.frame` containing at least a `chr` and `location` column.
 
 ```{r load_an_iset}
-load('data/test_iset.rda')
+#load('data/test_iset.rda')
+iset <- read.table(file='./data//WONG_NATURE-GENETICS_2014_INSERTIONS_MM10_FILTERED_BY_CONTROLS.cimpl', sep="\t", header=TRUE)
 
 head(iset)
 ```
@@ -51,15 +54,19 @@ We construct a CIMPLR object based on the insertion data and the parameters for 
 ```{r initialize_a_cimplr_object}
 co  <- cimplr(
   insertions        = iset,
-
+  
+  exclude.chromosomes = c('chrY'),
+  
   biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+#  biasmap           = 'biasmaps/bsgenomes-mm9-TA-stepsize1000-D4',
   biasmap.type      = 'count',
 
-  scales            = log.seq(500, 500000, 50),
+  scales            = log.seq(500, 500000, 50)[seq(21, 40, 5)],
 
+  alpha             = 0.05,
   p.adjust.method   = 'fdr',
   
-	n.cores           = c(scales=10, chromosomes=1),
+	n.cores           = 4,
 	genes.file        = NULL
 )
 ```
@@ -68,12 +75,16 @@ co  <- cimplr(
 Step 2: Load a bias map
 -------------------------
 
-As a bias map, we load the TA count files under the './references' folder. This bias map is simply the TA site background, but more sophisticated bias maps can be supplied here (link to CreateBiasMap Vignette).
+As a bias map, we load the TA count files under the './biasmaps' folder. This bias map is simply the TA site background, but more sophisticated bias maps can be supplied here (link to CreateBiasMap Vignette).
 
 ```{r set_reference}
 co <- cimplr.biasmap(co)
 ```
 
+
+```{r plot_bg, fig.width=10, fig.height=6}
+plot.chrscale(co, 'chr10', 34332, 'bg')
+```
 
 
 Step 3: Gaussian Kernel Convolution
@@ -82,23 +93,27 @@ Step 3: Gaussian Kernel Convolution
 With the insertion data and the bias map loaded and pre-processed within the CIMPLR object, we can now start the kernel convolution, resulting in Kernel Smoothed Estimates (KSEs) for all scales.
 ```{r convolve}
 co <- cimplr.convolve(co)
+```
 
+```{r plot_kse, fig.width=10, fig.height=6}
+plot.chrscale(co, 'chr10', 34332, 'kse')
+```
 
-# plot(co, scale=10046, chromosome='chr10')
+```{r plot_p, fig.width=10, fig.height=6}
+plot.chrscale(co, 'chr10', 34332, 'p')
 ```
 
 
-
-Step 4: Calculate the threshold
+Step 4: Calculate the threshold and the kse/ratio's
 -------------------------
 
 A seperate step calculates the threshold for the KSE at each scale. This is done using the analytical KSE distribution at a controlled FDR and taking into account multiple scales (link to KSEdistribution Vignette).
-```{r calculcate_threshold}
-co <- cimplr.threshold(co)
+```{r calculcate_ratios}
+co <- cimplr.ratios(co)
+```
 
-# again, but now with thresholds and pvalue, not yet the FDR controlled threshold
-# plot(co, scale=10046, chromosome='chr10')
-
+```{r plot_p, fig.width=10, fig.height=6}
+plot.chrscale(co, 'chr10', 34332, 'ratio')
 ```
 
 
@@ -110,11 +125,6 @@ With the thresholds in place, the last step is to do the CIS calling. This retur
 
 ```{r call_cis}
 co <- cimplr.call(co)
-
-
-
-# again, now with FDR controlled threshold!!
-# plot(co, scale=10046, chromosome='chr10')
 
 head(co$output$all.cises)
 head(co$output$collapsed.cises)
@@ -130,7 +140,8 @@ Step 6: Output figures and cis list. The export function generates:
 
 
 ```{r export}
-export.cimplr(co, './test_output/', include.scale=TRUE)
+#cimplr.annotate()
+#export.cimplr(co, './test_output/', include.scale=TRUE)
 ```
 
 
