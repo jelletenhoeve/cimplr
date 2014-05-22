@@ -35,8 +35,8 @@ source('R/biasmaps.R')
 Load your data as a `data.frame` containing at least a `chr` and `location` column.
 
 ```{r load_an_iset}
-load('data/test_iset.rda')
-#iset <- read.table(file='./data//WONG_NATURE-GENETICS_2014_INSERTIONS_MM10_FILTERED_BY_CONTROLS.cimpl', sep="\t", header=TRUE)
+#load('data/test_iset.rda')
+iset <- read.table(file='./data//WONG_NATURE-GENETICS_2014_INSERTIONS_MM10_FILTERED_BY_CONTROLS.cimpl', sep="\t", header=TRUE)
 
 head(iset)
 ```
@@ -56,8 +56,8 @@ co  <- cimplr(
   insertions        = iset,
   exclude.chromosomes = c('chrY'),
   
-  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
-#  biasmap           = 'biasmaps/bsgenomes-mm9-TA-stepsize1000-D4',
+#  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+  biasmap           = 'biasmaps/bsgenomes-mm9-TA-stepsize1000-D4',
   biasmap.type      = 'count',
   
   scales            = log.seq(500, 500000, 50)[seq(21, 40, 5)],

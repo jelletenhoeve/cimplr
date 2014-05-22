@@ -80,9 +80,9 @@ cimplr <- function(
 	chr.info <- chr.info[chromosomes, ]
 	chr.info$n.insertions=sapply(insertions, length)
 
-	n.insertions.total <- sum(chr.info[[3]])
-	n.bgsites.total <- sum(chr.info[[2]])
-	n.bp.total <- sum(chr.info[[1]])
+	n.insertions.total <- sum(as.numeric(chr.info[[3]]))
+	n.bgsites.total <- sum(as.numeric(chr.info[[2]]))
+	n.bp.total <- sum(as.numeric(chr.info[[1]]))
   
 	D <- as.numeric(substring(rev(strsplit(biasmap, '-')[[1]])[1], 2))
   
@@ -175,15 +175,15 @@ cimplr.biasmap <- function(cimplr.object) {
 	    cl=cluster,
 	    fun=calc.biasmap,
 	    
-	    chromosomes,
-	    scales,
+	    rep(chromosomes, each=length(scales)),
+	    rep(scales, length(chromosomes)),
 	    
 	    MoreArgs = list(
 	      input = cimplr.object$input
 	    )
 	  )
 	  
-	  names(new.data) <- paste(chromosomes, as.integer(round(scales)), sep='.')
+	  names(new.data) <- paste(rep(chromosomes, each=length(scales)), as.integer(round(rep(scales, length(chromosomes)))), sep='.')
 
     # cluster 2 for KSE distributions
 	  
@@ -273,6 +273,8 @@ cimplr.ratios <- function(cimplr.object) {
 
       cimplr.object$data,                # these are scale / chr
       cimplr.object$kse.distributions,
+      
+      .scheduling = 'dynamic',
 
       MoreArgs = list(
         corrected.alpha = corrected.alpha,

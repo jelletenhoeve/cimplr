@@ -2,11 +2,13 @@ calc.biasmap <- function(chr, scale, input) {
 
   with(input, {
   
-    wig.file <- paste(biasmap, '/', biasmap.type, '-scale', as.integer(round(scale)), '.wig', sep='')
-    bgranges <- import.wig(con=wig.file, asRangedData = biasmap.type == 'density')
+    genome <- strsplit(biasmap, '-')[[1]][2]
     
-    x  <- start(bgranges)[as.logical(seqnames(bgranges) == chr)]
-    bg <- score(bgranges)[as.logical(seqnames(bgranges) == chr)]
+    bw.file <- paste(biasmap, '/', biasmap.type, '-scale', as.integer(round(scale)), '.bw', sep='')
+    bgranges <- import.bw(con=bw.file, asRangedData = biasmap.type == 'density', selection=GenomicSelection(genome=genome, chrom=chr, colnames='score'))
+    
+    x  <- start(bgranges)
+    bg <- score(bgranges)
     
     list(
       chr = chr,
@@ -87,15 +89,17 @@ calc.corrected.alpha <- function(cimplr.object) {
     message('calc.corrected.alpha() - p.adjust.method = ', p.adjust.method)
     # p.adjust.method=c("fdr", "BY", "bonferroni"),
     
-    # contains all pvalues across all scales and all chromosomes
-    all.pvals <- sapply(cimplr.object$data, '[[', 'p')
+    # total number of p-value generated
+    m <- sum(sapply(cimplr.object$data, function(obj) length(obj$p)))
     
     if (p.adjust.method == 'bonferroni') {
       corrected.alpha <- alpha / m
     } else {
+      # contains all pvalues across all scales and all chromosomes
+      all.pvals <- unlist(lapply(cimplr.object$data, '[[', 'p'))
       p.sorted <- sort(all.pvals, na.last=NA) # note NA's are removed. p is NA when the background is < 0
       
-      m <- length(p.sorted)
+      #m <- length(p.sorted)
       k <- 1:m
       cm <- sum(1/(1:m))
       
@@ -140,10 +144,13 @@ calc.cis <- function(chr.object) {
   with(chr.object, {
     
     
-    
+    cat (chr, '.', scale, '\n')
     # get CIS as segments
     
+    significant[is.na(significant)] <- FALSE
     segs <- segments(significant)
+    
+    
     
     if (segs$n == 0) {
       cises <- NULL
