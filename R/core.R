@@ -116,46 +116,6 @@ whichLocalMaxima <- function(x, min.val=0.1) {
 }
 
 
-getEnsemblGenes <- function(chromosomes, geneIdentifiers=c('ensembl_gene_id', 'external_gene_id'), mart=useMart("ensembl", dataset = "mmusculus_gene_ensembl")) {
-  genes <- getBM(attributes=c('ensembl_gene_id', 'chromosome_name', 'start_position', 'end_position'), filters='chromosome_name', values=substring(chromosomes, 4), mart=mart)
-  
-  # , 'unigene'
-  # filter out unknown 
-  if (!all(i <- geneIdentifiers %in% listAttributes(mart)[,1])) {
-    stop(paste(geneIdentifiers[!i], ' is/are no valid biomaRt attributes for this mart.'))
-  }
-  
-  if (length(geneIdentifiers) > 0) {
-    if ( !(length(geneIdentifiers) == 1 & geneIdentifiers[1] == 'ensembl_gene_id' )) {
-      annot <- getBM(attributes=unique(c('ensembl_gene_id', geneIdentifiers)), filters='ensembl_gene_id', values=genes$ensembl_gene_id, mart=mart)
-      
-      extra_annot <- sapply(genes$ensembl_gene_id, function(ens) {
-        idx <- annot$ensembl_gene_id == ens
-        sapply(2:ncol(annot), function(col) {
-          vals <- annot[idx, col]
-          vals[vals==''] <- NA
-          paste(unique(na.omit(vals)), collapse='|')
-        })
-      })
-      
-      if (!is.null(dim(extra_annot)))
-        extra_annot <- t(extra_annot)
-      
-      extra_annot <- data.frame(extra_annot, stringsAsFactors=FALSE)
-      colnames(extra_annot) <- colnames(annot)[-1]
-      genes <- cbind(genes, extra_annot)
-    }
-  }
-  if (! 'ensembl_gene_id' %in% geneIdentifiers) {
-    genes$ensembl_gene_id <- NULL
-  }
-  
-  genes$chromosome_name <- paste('chr', genes$chromosome_name, sep='')
-  
-  attr(genes, 'geneIdentifiers') <- geneIdentifiers
-  
-  genes
-}
 
 
 block.convolve <- function(x, bg, width, verbose=FALSE) {

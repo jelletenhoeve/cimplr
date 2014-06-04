@@ -35,7 +35,7 @@ cimplr <- function(
 
   kNormal = 30,
   
-  genes.file='data/genes.bed',
+  cis.annotation.file='data/ensembl_genes.bed',
 	
   n.cores = 4
   
@@ -282,7 +282,7 @@ cimplr.ratios <- function(cimplr.object) {
       )
     )
     
-    stopCluster(cluster)    
+    stopCluster(cluster)
     
     list(
       input = cimplr.object$input,
@@ -304,7 +304,7 @@ cimplr.call <- function(cimplr.object) {
     
     
 	  cluster <- makePSOCKcluster(n.cores)
-	  clusterExport(cl=cluster, c('segments', '.formatScales'))
+	  clusterExport(cl=cluster, c('segments', '.formatScales', 'GRanges', 'IRanges', 'Rle'))
 
     message('cimplr.call() - call CIS')
 	  
@@ -319,29 +319,24 @@ cimplr.call <- function(cimplr.object) {
 	  )
 	  
 	  stopCluster(cluster)    
-
     
-		# put all cis into data.frame
-    tmp_names <- names(new.data)
-    names(new.data) <- NULL # trick to avoid 'rownames'
-    all_cises <- do.call('rbind', lapply(new.data, '[[', 'cises'))
-		names(new.data) <- tmp_names
+		# merge all cises into 1 GRanges
+    all_cises <- unlist(do.call('GRangesList', lapply(new.data, '[[', 'cises')), use.names=FALSE)
 		
   
 		message('cimplr.call() - call cross-scale CIS')
-    
-    
-    
-#		collapsed_cises <- do.call('rbind', mclapply(chromosomes, mc.cores=n.cores[2], FUN=function(chr) {
-#			message('cimplr.call() - call CIS across scales (chr = ', chr, ')')
-#			collapse.cis(new.data, scales, chr)
-#		}))
-
-    
+        
     cluster <- makePSOCKcluster(n.cores)
-    clusterExport(cl=cluster, c('segments', 'raster', 'extent', 'extent<-', 'focal', 'xyFromCell', 'Which'))
+    clusterExport(cl=cluster, c('segments', 'raster', 'extent', 'extent<-', 'focal', 'xyFromCell', 'Which', 'GRangesList'))
 
-		collapsed_cises <- do.call('rbind', clusterMap(
+    ### testing only
+		scalechr <- lapply(chromosomes, function(chr) {
+		  idx <- sapply(new.data, function(obj) obj$chr == chr)
+		  new.data[idx]
+		})
+    ### testing only
+		collapse.cis(scalechr[[1]])
+		collapsed_cises <- unlist(do.call('GRangesList', clusterMap(
 		  cl=cluster,
 		  fun = collapse.cis,
 		  
@@ -352,11 +347,11 @@ cimplr.call <- function(cimplr.object) {
 		  
 		  MoreArgs = list(
 		  )
-		))
+		)), use.names=FALSE)
 		
 		stopCluster(cluster)    
-		
-		output <- list(
+
+    output <- list(
 			all.cises = all_cises,
 			collapsed.cises = collapsed_cises
 		)
@@ -377,18 +372,23 @@ cimplr.call <- function(cimplr.object) {
 
 
 cimplr.annotate <- function(cimplr.object) {
-  # TODO
-  if ( !is.null(genes.file) ) {
+  with(cimplr.object$input, {
     
+    stopifnot(!is.null(cis.annotation.file) )
     
+      
     message('cimplr.call() - annotate CIS')
-    load(genes.file) # contains 'genes' object.
-    
-    all_cises       <- annotate.cis(all_cises, genes)
-    collapsed_cises <- annotate.cis(collapsed_cises, genes)
-  }
+    annots <- import(cis.annotation.file) # contains 'genes' object.
+      
+    #cimplr.object$output$all.cises       <- annotate.cis(all.cises, genes)
 
+    #collapsed_cises <- annotate.cis(collapsed_cises, genes)
+    
+    cimplr.object
+  })
 }
+
+
 
 annotate.cis <- function(cises, genes) {
 

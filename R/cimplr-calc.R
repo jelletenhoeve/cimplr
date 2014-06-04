@@ -141,7 +141,7 @@ calc.ratios <- function(chr.object, kse_dist, corrected.alpha, update.threshold=
 # Calculates CIS for each scale
 #
 calc.cis <- function(chr.object) {
-  with(chr.object, {
+  chr.object$cises <- with(chr.object, {
     
     
     cat (chr, '.', scale, '\n')
@@ -180,36 +180,27 @@ calc.cis <- function(chr.object) {
       
       
       
-      cises <- data.frame(
-        chromosome      = chr,
-        start           = start,
-        end             = end,
-        width           = end - start,
-        peak.location   = peak.location,
-        peak.kse.value  = peak.kse.value,
-        peak.bg         = peak.bg,
-        peak.ratio      = peak.ratio,
+      cises <- GRanges(
+        ranges    = IRanges(start, end),
+        seqnames  = Rle(chr),
+        peak.location               = peak.location,
+        peak.kse.value              = peak.kse.value,
+        peak.bg                     = peak.bg,
+        peak.ratio                  = peak.ratio,
         n.insertions.within.3.sigma = n.insertions.within.3.sigma,
-        scale           = scale,
-        alpha           = alpha,
-        p.adjust.method = p.adjust.method,
-        corrected.alpha = corrected.alpha,
-        stringsAsFactors=FALSE
+        scale                       = scale,
+        alpha                       = alpha,
+        p.adjust.method             = p.adjust.method,
+        corrected.alpha             = corrected.alpha
       )
-      
-      rownames(cises) <- paste('CIS', substring(chr, 4), ':', peak.location, '_', .formatScales(scale), sep='')
-      
+      names(cises) <- paste('CIS', substring(chr, 4), ':', peak.location, '_', .formatScales(scale), sep='')
     }
     
-    
-    c(
-      chr.object,
-      list(
-        cises       = cises
-      )
-    )
-    
+    cises
   }) # end 'with'
+  
+  chr.object
+  
 }
 
 
@@ -220,6 +211,9 @@ calc.cis <- function(chr.object) {
 # Does the cross-scale CIS calling given a chromosome.
 #
 collapse.cis <- function(chr.objects) {
+  
+  library(BiocGenerics)
+  library(GenomicRanges)
   
   # Calculate the min.p.value CIS
   x <- chr.objects[[1]]$x # can be optimised
@@ -236,11 +230,11 @@ collapse.cis <- function(chr.objects) {
   
   
   if (segs$n == 0) {
-    cises <- NULL
+    cises <- GRanges()
   } else {
     
     
-    cises <- do.call('rbind', mapply(SIMPLIFY=FALSE, FUN=function(seg.start, seg.end) {
+    cises <- unlist(do.call('GRangesList', mapply(SIMPLIFY=FALSE, FUN=function(seg.start, seg.end) {
       
       
       ## Convert it to a raster object
@@ -297,12 +291,12 @@ collapse.cis <- function(chr.objects) {
       #			}
       
       ## For each maxXY (a maximimam in the ratio space), select the CIS
-      cises <- unique(do.call('rbind', lapply(1:nrow(maxXY), function(i) {
+      cises <- unlist(do.call('GRangesList', lapply(1:nrow(maxXY), function(i) {
         
         peak.location <- x[maxXY[i, 'x']]
         cises_at_selected_scale <- chr.objects[[maxXY[i, 'y']]]$cises
         
-        idx <- cises_at_selected_scale$start <= peak.location & cises_at_selected_scale$end >= peak.location
+        idx <- start(cises_at_selected_scale) <= peak.location & end(cises_at_selected_scale) >= peak.location
         if (sum(idx) != 1) {
           plot(r)
           plot(r2)
@@ -315,15 +309,15 @@ collapse.cis <- function(chr.objects) {
         
         
         
-        cises_at_selected_scale[idx, ]
-      })))
-      
-      
+        cises_at_selected_scale[idx]
+      })), use.names=FALSE)
+            
       # select the CIS at the global max of the cloud.
-      cises[which.max(cises$peak.ratio), ]
+      cises[which.max(cises$peak.ratio)]
       
       
-    }, segs$start.pos, segs$end.pos))
+    }, segs$start.pos, segs$end.pos)), use.names=FALSE)
+    
   }
   cises
 }

@@ -55,17 +55,13 @@ We construct a CIMPLR object based on the insertion data and the parameters for 
 co  <- cimplr(
   insertions        = iset,
   exclude.chromosomes = c('chrY'),
-  
-#  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
   biasmap           = 'biasmaps/bsgenomes-mm9-TA-stepsize1000-D4',
   biasmap.type      = 'count',
-  
   scales            = log.seq(500, 500000, 50)[seq(21, 40, 5)],
   alpha             = 0.05,
   p.adjust.method   = 'fdr',
-  
 	n.cores           = 4,
-	genes.file        = NULL
+  cis.annotation.file = 'data/ensembl_genes.bed'
 )
 ```
 
@@ -123,9 +119,6 @@ With the thresholds in place, the last step is to do the CIS calling. This retur
 
 ```{r call_cis}
 co <- cimplr.call(co)
-
-head(co$output$all.cises)
-head(co$output$collapsed.cises)
 ```
 
 
@@ -138,8 +131,7 @@ Step 6: Output figures and cis list. The export function generates:
 
 
 ```{r export}
-#cimplr.annotate()
-#export.cimplr(co, './test_output/', include.scale=TRUE)
+export.cis(co, what='collapsed', type='txt', file='collapsed_cises.txt')
 ```
 
 

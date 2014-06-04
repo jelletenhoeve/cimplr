@@ -1,0 +1,43 @@
+CIMPLR - Generate a CIS annotation file (genes)
+========================================================
+
+
+
+
+Create a annation BED file from Ensemble
+-------------------------
+
+
+```{r load_libs}
+library(biomaRt)
+library(rtracklayer)
+```
+
+```{r load_genes_from_biomart}
+chromosomes <- c(paste('chr', 1:19, sep=''), 'chrX', 'chrY')
+
+mart <- useMart("ensembl", dataset = "mmusculus_gene_ensembl")
+genes <- getBM(attributes=c('ensembl_gene_id', 'external_gene_id', 'chromosome_name', 'start_position', 'end_position', 'strand'), filters='chromosome_name', values=substring(chromosomes, 4), mart=mart)
+
+
+genes$strand <- c('-', '+')[(genes$strand + 3) / 2]
+genes$chromosome_name <- paste('chr', genes$chromosome_name, sep='')
+
+str(genes)
+```
+
+
+```{r make_granges}
+
+granges <- with(genes, GRanges(ranges = IRanges(start_position, end_position), strand = Rle(factor(strand)), seqnames = Rle(factor(chromosome_name)), name = external_gene_id))
+
+granges
+```
+
+
+```{r export_bed}
+export(granges, con='ensembl_genes.bed')
+```
+
+
+

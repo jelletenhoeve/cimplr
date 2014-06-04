@@ -253,6 +253,51 @@ export.cimplr <- function(cimplr.object, output.dir, include.scales=TRUE) {
 }
 
 
+export.cis <- function(cimplr.object, what=c('collapsed', 'all'), type=c('bed', 'txt'), file, sep=',') {
+  what <- match.arg(what)
+  type <- match.arg(type)
+  
+  cat('', sep='', file=file, append=FALSE) # create a new file
+  cises <- switch(what,
+    collapsed= cimplr.object$output$collapsed.cises,
+    all = cimplr.object$output$all.cises
+  )
+  
+  if (type=='bed') {
+    export.bed(cises, con=file)
+  } else {
+  
+    for (i in 1:length(cises)) {
+      elementMetadata(cises[i])
+      cis_header <- c(
+        paste('id: ', names(cises[i]), sep=''),
+        paste('chr: ', as.character(seqnames(cises[i])), sep=''),
+        paste('start: ', start(cises[i]), sep=''),
+        paste('end: ', end(cises[i]), sep=''),
+        paste('width: ', width(cises[i]), sep='')
+      )
+      cis_header <- paste('# ', cis_header, sep='')
+      cat(cis_header, sep='\n', file=file, append=TRUE)
+      
+      meta_data <- paste('# ', names(elementMetadata(cises[i])), ': ', unlist(elementMetadata(cises[i])), sep='')  
+      cat(meta_data, sep='\n', file=file, append=TRUE)
+      
+      
+      insertions <- cimplr.object$input$insertions.org
+      insertions <- insertions[insertions$chr == as.character(seqnames(cises[i])), ]
+      
+      start <- start(cises[i])
+      end <- end(cises[i])
+      scale <- elementMetadata(cises[i])$scale
+      insertions <- insertions[insertions$location >=  (start - 3 * scale) & insertions$location <=  (end + 3 * scale), ]
+      
+      insertion_header <- paste('# insertions: ', paste(colnames(insertions), collapse=', '), sep='')  
+      cat(insertion_header, sep='\n', file=file, append=TRUE)
+      write.table(insertions, file=file, sep=sep, append=TRUE, row.names=FALSE, col.names=FALSE, quote=FALSE)
+    }
+  }
+}
+
 
 # @TODO: to be changed to Alistair's code
 getCISMatrix <- function(cimplAnalysis, ciss) {
@@ -289,5 +334,3 @@ getCISMatrix <- function(cimplAnalysis, ciss) {
     data.frame(chr_data, cisids, stringsAsFactors=FALSE)
   }))
 }
-
-
