@@ -153,7 +153,7 @@ calc.cis <- function(chr.object) {
     
     
     if (segs$n == 0) {
-      cises <- NULL
+      cises <- GRanges()
     } else {
       
       # peak is defined as the 
