@@ -10,18 +10,31 @@ buildBiasmapFromBSgenome <- function(
   chromosomes,
   scales,
 	stepsize=100, D=4,
-  n.cores=c(chromosomes=1,scales=1),
+  n.cores=4,
   biasmaps.dir
   ) {
 	
 
 	# Find 'pattern' sites
 	cat('Matching pattern ', pattern, ' to ', paste(chromosomes, collapse=', '), '...', '\n', sep='')
-	bgsites <- mclapply(chromosomes, mc.cores=n.cores[1], FUN=function(chr) {
-		start(matchPattern(pattern, bsgenome[[chr]], max.mismatch=0))
-	})
-	names(bgsites) <- chromosomes
+  
+	cluster <- makeForkCluster(n.cores)
+	
+  bgsites <- clusterMap(
+    cl=cluster,
+    fun=function(chr) {
+      start(matchPattern(pattern, bsgenome[[chr]], max.mismatch=0))
+    },
+    scales,
+    MoreArgs = list(
+    )
+  )
 
+	stopCluster(cluster)
+
+	names(bgsites) <- chromosomes
+	
+	
   
   # Create the output dir, f.e. bsgenome-mm9-TA-S100-D4
   output.dir <- paste(biasmaps.dir, '/bsgenomes-', providerVersion(bsgenome), '-', pattern, '-stepsize', stepsize, '-D', D, sep='')

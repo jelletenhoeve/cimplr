@@ -253,7 +253,7 @@ export.cimplr <- function(cimplr.object, output.dir, include.scales=TRUE) {
 }
 
 
-export.cis <- function(cimplr.object, what=c('collapsed', 'all'), type=c('bed', 'txt'), file, sep=',') {
+export.cis <- function(cimplr.object, what=c('collapsed', 'all'), type=c('bed', 'txt'), file, annotation.file, sep=',', score.column='peak.pvalue', maxgap=100e3) {
   what <- match.arg(what)
   type <- match.arg(type)
   
@@ -263,7 +263,41 @@ export.cis <- function(cimplr.object, what=c('collapsed', 'all'), type=c('bed', 
     all = cimplr.object$output$all.cises
   )
   
+  cis.peaks <- cises
+  start(cis.peaks) <- cises$peak.location
+  end(cis.peaks) <- cises$peak.location
+  
+  
+  # do the annotation
+  if(!missing(annotation.file) ) {
+  
+    message('annotating CIS using: ', annotation.file)
+    annots <- import(annotation.file, asRangedData=FALSE) # contains 'genes' object.
+    
+    cises$nearest <- NA
+    cises$others <- NA
+    cises$maxgap <- maxgap
+    ov <- findOverlaps(cises, annots, maxgap=maxgap)
+    for (i in unique(queryHits(ov))) {
+      
+      genes <- annots[subjectHits(ov)[queryHits(ov) == i]]
+      
+      nearest.idx <- nearest(cis.peaks[i], genes)
+      others.idx <- setdiff(1:length(genes), nearest.idx)
+      
+      cises[i]$nearest <- paste(elementMetadata(genes[nearest.idx])$name, collapse='|')
+      if (length(others.idx) > 0) {
+        cises[i]$others  <- paste(elementMetadata(genes[others.idx])$name, collapse='|')
+      }
+    }
+  }
+  
+  
   if (type=='bed') {
+    
+    score.column <- match.arg(score.column, choices=colnames(elementMetadata(cises)))
+    cises$score <- elementMetadata(cises)[[score.column]]
+    
     export.bed(cises, con=file)
   } else {
   
@@ -291,46 +325,10 @@ export.cis <- function(cimplr.object, what=c('collapsed', 'all'), type=c('bed', 
       scale <- elementMetadata(cises[i])$scale
       insertions <- insertions[insertions$location >=  (start - 3 * scale) & insertions$location <=  (end + 3 * scale), ]
       
-      insertion_header <- paste('# insertions: ', paste(colnames(insertions), collapse=', '), sep='')  
+      insertion_header <- paste('# insertions: ', paste(colnames(insertions), collapse=sep), sep='')  
       cat(insertion_header, sep='\n', file=file, append=TRUE)
       write.table(insertions, file=file, sep=sep, append=TRUE, row.names=FALSE, col.names=FALSE, quote=FALSE)
     }
   }
 }
 
-
-# @TODO: to be changed to Alistair's code
-getCISMatrix <- function(cimplAnalysis, ciss) {
-  df <- do.call('rbind', lapply(cimplAnalysis@chromosomes, function(chr) {
-    chr.idx <- which(cimplAnalysis@chromosomes == chr)
-    
-    
-    chr_data <- cimplAnalysis@cimplObjects[[chr.idx]][[1]]@data
-    
-    cisids <- do.call('cbind', lapply(cimplAnalysis@scales, function(kw) {
-      
-      kw.idx <- which(cimplAnalysis@scales == kw)
-      cimplObject <- cimplAnalysis@cimplObjects[[chr.idx]][[kw.idx]]
-      
-      # snap insertions to peaks (see http://bioinformatics.nki.nl/forum/viewtopic.php?f=4&t=19)
-      locations <- sapply(locations, function(loc) round(peaks[which.min(abs(peaks - loc ))]))
-      
-      snappedLocs <- .snapToPeaks(chr_data$location, cimplObject@peaks$x)
-      
-      insertion2cis <- rep('', dim(chr_data)[1])
-      
-      ciss.idx <- which(ciss$chromosome == chr & ciss$scale == kw)
-      for (i in ciss.idx) {
-        #				insertion2cis[snappedLocs >= ciss$start[i] & snappedLocs <= ciss$end[i]] <- rownames(ciss)[i]
-        #				insertion2cis[snappedLocs == ciss$peak_location[i]] <- rownames(ciss)[i]
-        locs.idx <- snappedLocs >= ciss$start[i] & snappedLocs <= ciss$end[i]
-        
-        insertion2cis[locs.idx] <- paste(insertion2cis[locs.idx], rownames(ciss)[i], sep='|')
-      }
-      
-      substring(insertion2cis, 2)
-    }))
-    colnames(cisids) <- cimplAnalysis@scales
-    data.frame(chr_data, cisids, stringsAsFactors=FALSE)
-  }))
-}

@@ -12,16 +12,15 @@ library(rtracklayer)
 library(raster)
 library(RMySQL)
 
-
 source('R/AllClasses.R')
 source('R/AllGenerics.R')
 source('R/KSEDistribution.R')
-
 source('R/core.R')
 source('R/cimplr.R')
+source('R/cimplr-calc.R')
+source('R/cimplr-export.R')
 source('R/biasmaps.R')
 source('R/artificial_db.R')
-
 ```
 
 
@@ -38,17 +37,13 @@ iset <- getArtificialIset(conn, artificial_iset_ids[500])
 
 co  <- cimplr(
   insertions        = iset,
-  
-  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+#  biasmap           = 'biasmaps_chr10/bsgenomes-mm9-TA-stepsize100-D4',
+  biasmap           = 'biasmaps/bsgenomes-mm9-TA-stepsize1000-D4',
   biasmap.type      = 'count',
-
-  scales            = log.seq(500, 500000, 50)[1:2],
-  
+  scales            = log.seq(500, 500000, 50)[c(26:35)],
   alpha             = 0.05,
   p.adjust.method   = 'fdr',
-
-	n.cores           = c(scales=1, chromosomes=1),
-	genes.file        = NULL
+	n.cores           = 4
 )
 
 
@@ -74,6 +69,7 @@ dbDisconnect(conn)
 
 co <- cimplr.biasmap(co)
 co <- cimplr.convolve(co)
+co <- cimplr.ratios(co)
 
 
 
@@ -86,7 +82,7 @@ co <- cimplr.convolve(co)
 ```{r}
 
 artificial_iset_ids <- sample(artificial_iset_ids)
-artificial_iset_ids <- 1000
+#artificial_iset_ids <- 1000
 
 mcresult <- mclapply (artificial_iset_ids, mc.cores=10, function(artificial_iset_id) {
   
@@ -104,49 +100,32 @@ mcresult <- mclapply (artificial_iset_ids, mc.cores=10, function(artificial_iset
 
 	co <- cimplr.replace_insertions(co, iset)
 	co <- cimplr.convolve(co)
-  co <- cimplr.threshold(co)
+  co <- cimplr.ratios(co)
 	co <- cimplr.call(co)
 
 
 
 	message(progress, ' - evaluate (iset_id = ', artificial_iset_id, ')')
 
-	predicted_cis <- co$output$collapsed.cises
-
-
-	if (is.null(predicted_cis)) {
-		predicted <- GRanges()
-	} else {
-
-		predicted <- GRanges(
-			seqnames = Rle(predicted_cis$chromosome),
-			ranges = IRanges(
-				start = predicted_cis$start,
-				end = predicted_cis$end
-			)
-		)
-	}
-
+	predicted <- co$output$collapsed.cis
 
 	writeEvaluation(conn, actual, predicted, artificial_iset_id, caller)
 
 	dbDisconnect(conn)
 
-	if ((artificial_iset_id %% 100) == 0) {
-		message(progress, ' - export (iset_id = ', artificial_iset_id, ')')
-		art.output.dir  <- paste('../cimplr_projects/artificial/iset', artificial_iset_id, sep='')
-		dir.create(art.output.dir, showWarnings=FALSE, recursive=TRUE)
-
-		export.cimplr(co, output.dir = art.output.dir)
-	}
+#	if ((artificial_iset_id %% 100) == 0) {
+#		message(progress, ' - export (iset_id = ', artificial_iset_id, ')')
+#		art.output.dir  <- paste('../cimplr_projects/artificial/iset', artificial_iset_id, sep='')
+#		dir.create(art.output.dir, showWarnings=FALSE, recursive=TRUE)
+#
+#		export.cimplr(co, output.dir = art.output.dir)
+#	}
 
 })
 
 message('')
 message('end loop for ', length(artificial_iset_ids), " iset's")
 message('')
-
-
-
-
 ```
+
+

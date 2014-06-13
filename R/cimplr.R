@@ -34,8 +34,6 @@ cimplr <- function(
   p.adjust.method=c("fdr", "BY", "bonferroni", "none"),
 
   kNormal = 30,
-  
-  cis.annotation.file='data/ensembl_genes.bed',
 	
   n.cores = 4
   
@@ -135,29 +133,27 @@ cimplr.replace_insertions <- function(cimplr.object, new.insertions) {
 
 		## clear the fields in data
 
-		scale.objects <- mclapply(cimplr.object$data, mc.cores=n.cores[1], FUN=function(scale.object) {
-			mclapply(scale.object, mc.cores=n.cores[2], FUN=function(chr.object) {
+		new.data <- lapply(cimplr.object$data, function(chr.object) {
 				if ('th' %in% names(chr.object)) {
           
           if (p.adjust.method == 'fdr' | p.adjust.method == 'BY') {
             message("cimplr.replace_insertions() - removing threshold because it depends on the data (in case of 'fdr' and 'BY')")
-            chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total")]
+            new.chr.object <- chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "n.x")]
           } else {
-					  chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "th", "corrected.alpha")]
+            new.chr.object <- chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "n.x", "th", "corrected.alpha")]
           }
 				} else {
-					chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total")]
+				  new.chr.object <- chr.object[c("chr", "scale", "x", "bg", "n.insertions", "n.insertions.total", "n.bgsites", "n.bgsites.total", "n.bp", "n.bp.total", "n.x")]
 				}
-			})
-		}) # end scale space
-
+				new.chr.object$locs <- insertions[[chr.object$chr]]
+				new.chr.object
+    })
 
 		list(
 			input = input,
-			data  = scale.objects,
+			data  = new.data,
 			kse.distributions = cimplr.object$kse.distributions
 		)
-
 	})
 }
 
@@ -368,55 +364,4 @@ cimplr.call <- function(cimplr.object) {
 
 
 
-
-
-
-cimplr.annotate <- function(cimplr.object) {
-  with(cimplr.object$input, {
-    
-    stopifnot(!is.null(cis.annotation.file) )
-    
-      
-    message('cimplr.call() - annotate CIS')
-    annots <- import(cis.annotation.file) # contains 'genes' object.
-      
-    #cimplr.object$output$all.cises       <- annotate.cis(all.cises, genes)
-
-    #collapsed_cises <- annotate.cis(collapsed_cises, genes)
-    
-    cimplr.object
-  })
-}
-
-
-
-annotate.cis <- function(cises, genes) {
-
-	geneIdentifiers <- attr(genes, 'geneIdentifiers')
-	genes <- split(genes, genes$chromosome_name)
-
-	n.cis <- nrow(cises)
-
-	for(id in geneIdentifiers) {
-		cises[paste('associated_', id, sep='')] <- rep('', n.cis)
-		cises[paste('other_', id, sep='')] <- rep('', n.cis)
-	}
-
-	for (i in 1:n.cis) {
-		ags <- .associateGenes(cises$start[i], cises$end[i], cises$peak.location[i], genes[[cises$chromosome[i]]])
-		for(id in geneIdentifiers) {
-			
-			a <- genes[[cises$chromosome[i]]][ags$associated, id]
-			a <- a[a!='']
-			
-			o <- genes[[cises$chromosome[i]]][ags$other, id]
-			o <- o[o!='']
-
-			cises[i, paste('associated_', id, sep='')] <- paste(a, collapse='|')
-			cises[i, paste('other_', id, sep='')] <- paste(o, collapse='|')
-		}
-	}
-
-	cises
-}
 

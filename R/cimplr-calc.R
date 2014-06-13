@@ -166,6 +166,7 @@ calc.cis <- function(chr.object) {
       peak.kse.value  <- inskse[peak.idx]
       peak.bg         <- bg[peak.idx]
       peak.ratio      <- ratio[peak.idx]
+      peak.pvalue     <- p[peak.idx]
       
       
       start <- x[segs$start.pos]
@@ -187,6 +188,7 @@ calc.cis <- function(chr.object) {
         peak.kse.value              = peak.kse.value,
         peak.bg                     = peak.bg,
         peak.ratio                  = peak.ratio,
+        peak.pvalue                 = peak.pvalue,
         n.insertions.within.3.sigma = n.insertions.within.3.sigma,
         scale                       = scale,
         alpha                       = alpha,

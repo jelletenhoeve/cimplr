@@ -60,8 +60,7 @@ co  <- cimplr(
   scales            = log.seq(500, 500000, 50)[seq(21, 40, 5)],
   alpha             = 0.05,
   p.adjust.method   = 'fdr',
-	n.cores           = 4,
-  cis.annotation.file = 'data/ensembl_genes.bed'
+	n.cores           = 4
 )
 ```
 
@@ -131,7 +130,7 @@ Step 6: Output figures and cis list. The export function generates:
 
 
 ```{r export}
-export.cis(co, what='collapsed', type='txt', file='collapsed_cises.txt')
+export.cis(co, what='collapsed', type='txt', file='collapsed_cises.txt', annotation.file='data/ensembl_genes.bed')
 ```
 
 
